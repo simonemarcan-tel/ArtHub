@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
 
-namespace ArtHub
+namespace ArtHub.Utils
 {
     /// <summary>
     ///  A set of useful function for interacting with ADO.NET

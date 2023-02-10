@@ -17,6 +17,8 @@ namespace ArtHub.Models
 
         [Required]
         public int UserId { get; set; }
+        public UserProfile UserProfile { get; set; }
+
 
 
     }

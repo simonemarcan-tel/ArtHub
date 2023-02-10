@@ -7,11 +7,11 @@ namespace ArtHub.Repositories
 {
     public interface IArtListingRepository
     {
-        List<Listing> GetAll();
+        List<Listing> GetAll(Listing listing);
         Listing GetById(int id);
         List<Listing> GetByUserId(string firebaseId);
         void Add(Listing listing);
         void Update(Listing listing);       
-        void Delete(Listing listing);
+        void Delete(int id);
     }
 }

@@ -1,17 +1,17 @@
-﻿using ArtHub;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Identity.Client;
+﻿using ArtHub.Models;
+using ArtHub.Utils;
 using System.Collections.Generic;
-
+using Microsoft.Extensions.Configuration;
+using System.Data.SqlClient;
 
 namespace ArtHub.Repositories
 {
+
     public class ArtListingRepository : BaseRepository, IArtListingRepository
     {
         public ArtListingRepository(IConfiguration configuration) : base(configuration) { }
-        
-        public List<Listing> GetAll()
+
+        public List<Listing> GetAll(Listing listing)
         {
             using (var conn = Connection)
             {
@@ -19,127 +19,236 @@ namespace ArtHub.Repositories
                 using (var cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                    SELECT l.Id, l.Description, l.ImageUrl
-                    ul.FirebaseUserId
+           SELECT l.Id, l.Description, l.ImageUrl, l.UserId,
+                  ul.FireBaseUserId, ul.DisplayName, ul.Email,
+                  u.Id, o=u.Name
+                    
+             FROM Listing l
+                  JOIN UserProfile ul ON l.UserId = ul.Id
+            WHERE c.CreatedAt <= SYSDATETIME()
+         ORDER BY c.CreatedAt DESC
+        ";
 
-                    FROM Listing l";
-                }
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    var listings = new List<Listing>();
-                    while (reader.Read())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        listings.Add(new Listing()
+
+                        var listings = new List<Listing>();
+                        while (reader.Read())
                         {
-                            Id = DbUtils.GetInt(reader, "Id"),
-                            Description = DbUtils.GetString(reader, "Description"),
-                            ImageUrl = DbUtils.GetString(reader, "ImageUrl"),
-                            UserId = DbUtils.GetInt(reader, "UserId")
-                        });
+                            listings.Add(new Listing()
+                            {
+                                Id = DbUtils.GetInt(reader, "Id"),
+                                ImageUrl = DbUtils.GetString(reader, "ImageUrl"),
+                                Description = DbUtils.GetString(reader, "Description"),
+                               
+                                UserId = DbUtils.GetInt(reader, "UserId"),
+                                UserProfile = new UserProfile()
+                                {
+                                    FirebaseUserId = DbUtils.GetString(reader, "FireBaseUserId"),
+                                    DisplayName = DbUtils.GetString(reader, "DisplayName"),
+                                    Email = DbUtils.GetString(reader, "Email"),
+                                   
+                                }
+                            });
+                        }
+
+                        return listings;
                     }
-                    return listings;
                 }
             }
-            
-            public Listing GetById(int id)
-            { 
-                using (var conn = Connection)
-                {
-                    conn.Open();
-                    using (var cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandTezt = @"
-                            SELECT l.Description, l.ImageUrl
-                            ul.FirebaseUserId
-                            FROM Listing l
-                            JOIN User up ON l.UserId
-                            WHERE l.Id = @Id";
-
-                        DbUtils.AddParameter(cmd, "@Id", id);
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            Listing listing = null;
-                            if (reader.Read())
-                            {
-                                listing = new Listing()
-                                {
-                                    Description = DbUtils.GetString(reader, "Description"),
-                                    ImageUrl = DbUtils.GetString(reader, "ImageUrl"),
-                                    UserId = DbUtils.GetInt(reader, "UserId")
-                                };
-                            }
-                            return listing;
-                        }
-                    }
-                }
-                public List<Listing> GetByUserId(string firebaseUserId)
-                {
-                    using (var conn = Connection) 
-                    {
-                    conn.Open();
-                        using (var cmd = conn.CreateCommand())
-                        {
-                            cmd.CommandText = @"
-                        SELECT l.Id, l.Description, l.ImageUrl
-                        ul.FirebaseUserId
-                        FROM Listing l
-                        WHERE ul.FirebaseUserId = @firebaseUserId";
-
-                            DbUtils.AddParameter(cmd, "@firebaseUserId", firebaseUserId);
-                            using (SqlDataReader = cmd.ExecuteReader())
-                            {
-                                var listings = new List<listing>();
-                                while (reader.Read())
-                                {
-                                    listings.Add(new Listing()
-                                    {
-                                        Id = DbUtils.GetInt(reader, "Id"),
-                                        Description = DbUtils.GetString(reader, "Description"),
-                                        ImageUrl = DbUtils.GetString(reader, "ImageUrl"),
-                                        UserId = DbUtils.GetInt(reader, "UserId")
-                                    });
-                                }
-                                return listings;
-                            }
-
-
-                        }
-                    }
-
-
-                }
-                public void Add(Listing listing)
-                {
-                    using (SqlConnection conn = Connection)
-                    {
-                        conn.Open();
-                        using (SqlCommand cmd = conn.CreateCommand()) 
-                        {
-                            cmd.CommandText = @"
-                            INSERT INTO Card (
-                            Description,
-                            ImageUrl,
-                            UserId
-                            )
-                            OUTPUT INSERTED.ID
-
-                               VALUES (
-                                @Description,
-                                @ImageUrl,
-                                @UserId)";
-
-                            DbUtils.AddParameter(cmd, "@Description", listing.Description);
-                            DbUtils.AddParameter(cmd, "@ImageUrl", listing.ImageUrl);
-                            DbUtils.AddParameter(cmd, "@UserId", listing.UserId);
-
-                            listing.Id = (int)cmd.ExecuteScalar();
-                        }
-
-                    }
-                }
-                //this is where we would apply the DELETE and UPDATE functionalities
-            } 
         }
+
+
+        public Listing GetById(int id)
+        {
+            using (var conn = Connection)
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+        SELECT l.Title, l.Description l.ImageUrl,
+                 
+                  ul.FireBaseUserId, ul.DisplayName, ul.Email,
+                  u.Id, u.Name
+        FROM Listing l
+                  JOIN UserProfile up ON l.UserId = ul.Id
+                
+            WHERE l.Id = @Id";
+
+                    DbUtils.AddParameter(cmd, "@Id", id);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        Listing listing = null;
+                        if (reader.Read())
+                        {
+                            listing = new Listing()
+                            {
+                               
+                                Description = DbUtils.GetString(reader, "Description"),
+                                ImageUrl = DbUtils.GetString(reader, "ImageUrl"),
+                               
+                                
+                                UserId = DbUtils.GetInt(reader, "UserId"),
+                                UserProfile = new UserProfile()
+                                {
+                                    FirebaseUserId = DbUtils.GetString(reader, "FireBaseUserId"),
+                                    DisplayName = DbUtils.GetString(reader, "DisplayName"),
+                                    Email = DbUtils.GetString(reader, "Email"),
+                                   
+                                },
+                               
+                            };
+                        }
+                        return listing;
+                    }
+                }
+            }
+        }
+
+
+        public List<Listing> GetByUserId(string firebaseUserId)
+        {
+            using (var conn = Connection)
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+           SELECT l.Id, l.Description, l.ImageUrl, l.UserId, 
+                  ul.FireBaseUserId, ul.DisplayName, ul.Email,
+                  u.Id, u.Name
+             FROM Listing l
+                  JOIN UserProfile up ON l.UserId = ul.Id
+                
+            WHERE up.FireBaseUserId = @firebaseUserId
+        ";
+
+                    cmd.Parameters.AddWithValue("@firebaseUserId", firebaseUserId);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        var listings = new List<Listing>();
+                        while (reader.Read())
+                        {
+                            listings.Add(new Listing()
+                            {
+                                Id = DbUtils.GetInt(reader, "Id"),
+                                Description = DbUtils.GetString(reader, "Description"),
+                                ImageUrl = DbUtils.GetString(reader, "ImageUrl"),
+                               
+                                UserId = DbUtils.GetInt(reader, "UserId"),
+                                UserProfile = new UserProfile()
+                                {
+                                    FirebaseUserId = DbUtils.GetString(reader, "FireBaseUserId"),
+                                    DisplayName = DbUtils.GetString(reader, "DisplayName"),
+                                    Email = DbUtils.GetString(reader, "Email"),
+                                    
+                                },
+                               
+                            });
+                        }
+
+                        return listings;
+                    }
+                }
+            }
+        }
+
+
+        public void Add(Listing listing)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        INSERT INTO Listing(
+                       
+                        Description,
+                        ImageUrl,
+                       
+                       
+                        UserId,
+                       
+                        )
+                        
+                        OUTPUT INSERTED.ID
+	                    
+                        VALUES (
+                        
+                        @Description,
+                        @ImageUrl,
+                      
+                        @UserId,
+                        )
+                    ";
+
+                   
+                    DbUtils.AddParameter(cmd, "@Description", listing.Description);
+                    DbUtils.AddParameter(cmd, "@ImageUrl", listing.ImageUrl);
+                  
+                    DbUtils.AddParameter(cmd, "@UserId", listing.UserId);
+                    
+
+                    listing.Id = (int)cmd.ExecuteScalar();
+                }
+            }
+        }
+        public void Update(Listing listing)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                UPDATE Listing
+                SET 
+                    Description = @Description,
+                    ImageUrl = @ImageUrl,
+                   
+                    UserId = @UserId,
+                   
+                WHERE Id = @Id
+            ";
+
+                  
+                    DbUtils.AddParameter(cmd, "@Description", listing.Description);
+                    DbUtils.AddParameter(cmd, "@ImageUrl", listing.ImageUrl);
+                   
+                    DbUtils.AddParameter(cmd, "@UserId", listing.UserId);
+                  
+                    DbUtils.AddParameter(cmd, "@Id", listing);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void Delete(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                DELETE FROM Listing
+                WHERE Id = @Id
+            ";
+
+                    cmd.Parameters.AddWithValue("@Id", id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+
     }
 }
+

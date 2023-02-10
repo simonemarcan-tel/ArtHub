@@ -3,7 +3,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import Header from "./components/Header";
 import ApplicationViews from "./components/ApplicationViews";
 import { onLoginStatusChange, getUserDetails } from "./modules/authManager";
-import firebase from 'firebase';
+import firebase from "firebase";
 
 function App() {
 
