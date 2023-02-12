@@ -42,7 +42,7 @@ export const getListingDetails = async (id) => {
   }
 };
 
-export const getUserListings = async () => {
+export default getUserListings = async () => {
   try {
     const token = await getToken();
     const response = await fetch(`${apiUrl}/userlistings`, {

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 //import Listing from "./Listings";
-import { getUserListings } from "../../modules/artListingManager";
+import getUserListings  from "../../modules/ListingManager";
 import './ArtListing.css';
 import { Pagination } from "../ui/Pagination";
 
 export default function UserArtList() {
     const [listings, setListings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [filteredListings, setFilteredListings] = useState([]);
     const ListingsPerPage = 15;
 
 
@@ -32,7 +33,7 @@ export default function UserArtList() {
                         </div>
                     </section>
                     <Pagination
-                        listingsPerPage={listingsPerPage}
+                        listingsPerPage={ListingsPerPage}
                         totalListings={filteredListings.length}
                         currentPage={currentPage}
                         setCurrentPage={setCurrentPage}

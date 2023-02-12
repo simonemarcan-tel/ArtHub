@@ -7,7 +7,8 @@ import firebase from "firebase";
 import reportWebVitals from './reportWebVitals';
 
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_API_KEY,
+  apiKey: process.env.AIzaSyCNPGAFE2zuO38EVOBfo8mBoUf8dH0WP0k
+  ,
 };
 firebase.initializeApp(firebaseConfig);
 const root = ReactDOM.createRoot(document.getElementById('root'));

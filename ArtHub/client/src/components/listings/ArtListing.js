@@ -157,7 +157,7 @@ export default function UserListing({ listing }) {
           <>
             <button className="btn-edit"
               onClick={(e) => handleEditClick(e)}><span>✏️</span></button>
-            <button className="btn-delete" onClick={handleCardOpen}><span>delete
+            <button className="btn-delete" onClick={handleListingOpen}><span>delete
             </span></button>
           </>
         )}
@@ -190,7 +190,7 @@ export default function UserListing({ listing }) {
         <Accordion>
           <center><AccordionDetails style={{ backgroundColor: "#FFB6C1" }}>
             <div className="comments">
-              {cardComments.map(comment => (
+              {listingComments.map(comment => (
                 <div key={comment.id}>
                   <p>
                     {comment.comment} - {comment.userProfile.displayName}
